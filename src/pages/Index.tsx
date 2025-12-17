@@ -1,19 +1,39 @@
 import { useEffect, useState } from "react";
 import { sampleData } from "@/data/sampleData";
 import { analyzeData, BottleneckAnalysis, AggregateMetrics } from "@/utils/analytics";
+import { generatePredictions, generateRecommendations, detectAnomalies, Prediction, Recommendation, Anomaly } from "@/utils/predictions";
 import { MetricsCard } from "@/components/MetricsCard";
 import { BottleneckChart } from "@/components/BottleneckChart";
 import { TopBottlenecks } from "@/components/TopBottlenecks";
-import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap } from "lucide-react";
+import { PredictiveInsights } from "@/components/PredictiveInsights";
+import { AlertsPanel } from "@/components/AlertsPanel";
+import { SimulationPanel } from "@/components/SimulationPanel";
+import { ExportPanel } from "@/components/ExportPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap, Brain, FlaskConical, Bell, Share2 } from "lucide-react";
 
 const Index = () => {
   const [bottlenecks, setBottlenecks] = useState<BottleneckAnalysis[]>([]);
   const [metrics, setMetrics] = useState<AggregateMetrics | null>(null);
+  const [predictions, setPredictions] = useState<Prediction[]>([]);
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
 
   useEffect(() => {
     const { bottlenecks: analyzedBottlenecks, metrics: analyzedMetrics } = analyzeData(sampleData);
     setBottlenecks(analyzedBottlenecks);
     setMetrics(analyzedMetrics);
+    
+    // Generate AI predictions and recommendations
+    const preds = generatePredictions(analyzedMetrics, analyzedBottlenecks);
+    setPredictions(preds);
+    
+    const recs = generateRecommendations(analyzedMetrics, analyzedBottlenecks);
+    setRecommendations(recs);
+    
+    // Detect anomalies
+    const detectedAnomalies = detectAnomalies(sampleData, analyzedMetrics);
+    setAnomalies(detectedAnomalies);
   }, []);
 
   if (!metrics) {
@@ -90,77 +110,109 @@ const Index = () => {
               variant={metrics.criticalBottlenecks > 0 ? "critical" : "success"}
             />
             <MetricsCard
-              title="High Risk Tasks"
-              value={metrics.highRiskTasks}
-              subtitle="Above threshold performance"
-              icon={AlertTriangle}
-              variant={metrics.highRiskTasks > 20 ? "warning" : "success"}
+              title="Active Alerts"
+              value={anomalies.filter(a => a.severity === "critical" || a.severity === "warning").length}
+              subtitle="Anomalies detected"
+              icon={Bell}
+              variant={anomalies.some(a => a.severity === "critical") ? "critical" : "warning"}
             />
           </div>
         </section>
 
-        {/* Visualization */}
-        <section>
-          <BottleneckChart data={bottlenecks} />
-        </section>
+        {/* Main Tabs for Features */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <Activity className="w-4 h-4" />
+              <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="predictive" className="flex items-center gap-2">
+              <Brain className="w-4 h-4" />
+              <span className="hidden sm:inline">Predictive AI</span>
+            </TabsTrigger>
+            <TabsTrigger value="alerts" className="flex items-center gap-2">
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">Alerts</span>
+            </TabsTrigger>
+            <TabsTrigger value="simulation" className="flex items-center gap-2">
+              <FlaskConical className="w-4 h-4" />
+              <span className="hidden sm:inline">Simulation</span>
+            </TabsTrigger>
+            <TabsTrigger value="export" className="flex items-center gap-2">
+              <Share2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Export</span>
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Top Bottlenecks */}
-        <section>
-          <TopBottlenecks bottlenecks={bottlenecks} limit={10} />
-        </section>
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-8">
+            <BottleneckChart data={bottlenecks} />
+            <TopBottlenecks bottlenecks={bottlenecks} limit={10} />
+            
+            {/* AI Insights */}
+            <section className="bg-card border-2 border-primary/30 rounded-xl p-6 shadow-glow">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-gradient-primary rounded-xl">
+                  <Zap className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-foreground mb-3">AI-Powered Quick Insights</h3>
+                  <div className="space-y-3">
+                    {metrics.criticalBottlenecks > 0 && (
+                      <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                        <p className="font-semibold text-destructive mb-1">🚨 Critical Action Required</p>
+                        <p className="text-sm text-foreground">
+                          {metrics.criticalBottlenecks} tasks showing critical delays. Recommend immediate resource allocation 
+                          and process review for tasks with queue times exceeding 25 minutes.
+                        </p>
+                      </div>
+                    )}
+                    
+                    {metrics.avgQueueTime > metrics.avgProcessTime && (
+                      <div className="p-4 bg-warning/10 border border-warning/30 rounded-lg">
+                        <p className="font-semibold text-warning mb-1">⚡ Queue Optimization Opportunity</p>
+                        <p className="text-sm text-foreground">
+                          Queue wait time ({metrics.avgQueueTime}m) exceeds process time ({metrics.avgProcessTime}m). 
+                          Consider implementing parallel processing or increasing capacity during peak periods.
+                        </p>
+                      </div>
+                    )}
 
-        {/* AI Insights */}
-        <section className="bg-card border-2 border-primary/30 rounded-xl p-6 shadow-glow">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-gradient-primary rounded-xl">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-foreground mb-3">AI-Powered Recommendations</h3>
-              <div className="space-y-3">
-                {metrics.criticalBottlenecks > 0 && (
-                  <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
-                    <p className="font-semibold text-destructive mb-1">🚨 Critical Action Required</p>
-                    <p className="text-sm text-foreground">
-                      {metrics.criticalBottlenecks} tasks showing critical delays. Recommend immediate resource allocation 
-                      and process review for tasks with queue times exceeding 25 minutes.
-                    </p>
+                    {metrics.efficiencyScore >= 60 && metrics.criticalBottlenecks === 0 && (
+                      <div className="p-4 bg-success/10 border border-success/30 rounded-lg">
+                        <p className="font-semibold text-success mb-1">✅ Strong Performance</p>
+                        <p className="text-sm text-foreground">
+                          Process efficiency at {metrics.efficiencyScore}% with no critical bottlenecks. 
+                          Continue monitoring for sustained performance.
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
-                
-                {metrics.avgQueueTime > metrics.avgProcessTime && (
-                  <div className="p-4 bg-warning/10 border border-warning/30 rounded-lg">
-                    <p className="font-semibold text-warning mb-1">⚡ Queue Optimization Opportunity</p>
-                    <p className="text-sm text-foreground">
-                      Queue wait time ({metrics.avgQueueTime}m) exceeds process time ({metrics.avgProcessTime}m). 
-                      Consider implementing parallel processing or increasing capacity during peak periods.
-                    </p>
-                  </div>
-                )}
-
-                {metrics.efficiencyScore < 60 && (
-                  <div className="p-4 bg-accent/10 border border-accent/30 rounded-lg">
-                    <p className="font-semibold text-accent mb-1">📊 Process Redesign Suggested</p>
-                    <p className="text-sm text-foreground">
-                      Current efficiency score of {metrics.efficiencyScore}% indicates potential for workflow optimization. 
-                      AI analysis suggests reviewing task dependencies and automating repetitive steps.
-                    </p>
-                  </div>
-                )}
-
-                {metrics.efficiencyScore >= 60 && metrics.criticalBottlenecks === 0 && (
-                  <div className="p-4 bg-success/10 border border-success/30 rounded-lg">
-                    <p className="font-semibold text-success mb-1">✅ Strong Performance</p>
-                    <p className="text-sm text-foreground">
-                      Process efficiency at {metrics.efficiencyScore}% with no critical bottlenecks. 
-                      Continue monitoring for sustained performance and consider minor optimizations for continuous improvement.
-                    </p>
-                  </div>
-                )}
+                </div>
               </div>
-            </div>
-          </div>
-        </section>
+            </section>
+          </TabsContent>
+
+          {/* Predictive AI Tab */}
+          <TabsContent value="predictive">
+            <PredictiveInsights predictions={predictions} recommendations={recommendations} />
+          </TabsContent>
+
+          {/* Alerts Tab */}
+          <TabsContent value="alerts">
+            <AlertsPanel anomalies={anomalies} />
+          </TabsContent>
+
+          {/* Simulation Tab */}
+          <TabsContent value="simulation">
+            <SimulationPanel baseMetrics={metrics} />
+          </TabsContent>
+
+          {/* Export Tab */}
+          <TabsContent value="export">
+            <ExportPanel metrics={metrics} bottlenecks={bottlenecks} />
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );
