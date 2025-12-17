@@ -9,8 +9,11 @@ import { PredictiveInsights } from "@/components/PredictiveInsights";
 import { AlertsPanel } from "@/components/AlertsPanel";
 import { SimulationPanel } from "@/components/SimulationPanel";
 import { ExportPanel } from "@/components/ExportPanel";
+import { DynamicBottleneckPanel } from "@/components/DynamicBottleneckPanel";
+import { DrillDownAnalytics } from "@/components/DrillDownAnalytics";
+import { IntegrationTemplates } from "@/components/IntegrationTemplates";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap, Brain, FlaskConical, Bell, Share2 } from "lucide-react";
+import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap, Brain, FlaskConical, Bell, Share2, Radio, Search, Plug } from "lucide-react";
 
 const Index = () => {
   const [bottlenecks, setBottlenecks] = useState<BottleneckAnalysis[]>([]);
@@ -121,10 +124,14 @@ const Index = () => {
 
         {/* Main Tabs for Features */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="flex flex-wrap h-auto gap-1 w-full lg:w-auto lg:inline-flex">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Activity className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="dynamic" className="flex items-center gap-2">
+              <Radio className="w-4 h-4" />
+              <span className="hidden sm:inline">Dynamic</span>
             </TabsTrigger>
             <TabsTrigger value="predictive" className="flex items-center gap-2">
               <Brain className="w-4 h-4" />
@@ -134,9 +141,17 @@ const Index = () => {
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Alerts</span>
             </TabsTrigger>
+            <TabsTrigger value="drilldown" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
             <TabsTrigger value="simulation" className="flex items-center gap-2">
               <FlaskConical className="w-4 h-4" />
               <span className="hidden sm:inline">Simulation</span>
+            </TabsTrigger>
+            <TabsTrigger value="integrations" className="flex items-center gap-2">
+              <Plug className="w-4 h-4" />
+              <span className="hidden sm:inline">Integrations</span>
             </TabsTrigger>
             <TabsTrigger value="export" className="flex items-center gap-2">
               <Share2 className="w-4 h-4" />
@@ -193,6 +208,11 @@ const Index = () => {
             </section>
           </TabsContent>
 
+          {/* Dynamic Bottleneck Tab */}
+          <TabsContent value="dynamic">
+            <DynamicBottleneckPanel />
+          </TabsContent>
+
           {/* Predictive AI Tab */}
           <TabsContent value="predictive">
             <PredictiveInsights predictions={predictions} recommendations={recommendations} />
@@ -203,9 +223,19 @@ const Index = () => {
             <AlertsPanel anomalies={anomalies} />
           </TabsContent>
 
+          {/* Drill-Down Analytics Tab */}
+          <TabsContent value="drilldown">
+            <DrillDownAnalytics bottlenecks={bottlenecks} />
+          </TabsContent>
+
           {/* Simulation Tab */}
           <TabsContent value="simulation">
             <SimulationPanel baseMetrics={metrics} />
+          </TabsContent>
+
+          {/* Integrations Tab */}
+          <TabsContent value="integrations">
+            <IntegrationTemplates />
           </TabsContent>
 
           {/* Export Tab */}
