@@ -4,6 +4,7 @@ import { analyzeData, BottleneckAnalysis, AggregateMetrics } from "@/utils/analy
 import { MetricsCard } from "@/components/MetricsCard";
 import { BottleneckChart } from "@/components/BottleneckChart";
 import { TopBottlenecks } from "@/components/TopBottlenecks";
+import { ClientRoadmap } from "@/components/ClientRoadmap";
 import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap } from "lucide-react";
 
 const Index = () => {
@@ -160,6 +161,11 @@ const Index = () => {
               </div>
             </div>
           </div>
+        </section>
+
+        {/* Client Roadmap */}
+        <section>
+          <ClientRoadmap />
         </section>
       </main>
     </div>
