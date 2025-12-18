@@ -12,6 +12,7 @@ import { ExportPanel } from "@/components/ExportPanel";
 import { DynamicBottleneckPanel } from "@/components/DynamicBottleneckPanel";
 import { DrillDownAnalytics } from "@/components/DrillDownAnalytics";
 import { IntegrationTemplates } from "@/components/IntegrationTemplates";
+import { DashboardSkeleton } from "@/components/DashboardSkeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap, Brain, FlaskConical, Bell, Share2, Radio, Search, Plug } from "lucide-react";
 
@@ -21,31 +22,75 @@ const Index = () => {
   const [predictions, setPredictions] = useState<Prediction[]>([]);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("Preparing dashboard...");
 
   useEffect(() => {
-    const { bottlenecks: analyzedBottlenecks, metrics: analyzedMetrics } = analyzeData(sampleData);
-    setBottlenecks(analyzedBottlenecks);
-    setMetrics(analyzedMetrics);
+    const loadData = async () => {
+      setIsLoading(true);
+      
+      // Simulate realistic loading with progress messages
+      setLoadingMessage("Analyzing workflow data...");
+      await new Promise(r => setTimeout(r, 300));
+      
+      const { bottlenecks: analyzedBottlenecks, metrics: analyzedMetrics } = analyzeData(sampleData);
+      setBottlenecks(analyzedBottlenecks);
+      setMetrics(analyzedMetrics);
+      
+      setLoadingMessage("Generating AI predictions...");
+      await new Promise(r => setTimeout(r, 300));
+      
+      // Generate AI predictions and recommendations
+      const preds = generatePredictions(analyzedMetrics, analyzedBottlenecks);
+      setPredictions(preds);
+      
+      setLoadingMessage("Preparing recommendations...");
+      await new Promise(r => setTimeout(r, 200));
+      
+      const recs = generateRecommendations(analyzedMetrics, analyzedBottlenecks);
+      setRecommendations(recs);
+      
+      setLoadingMessage("Detecting anomalies...");
+      await new Promise(r => setTimeout(r, 200));
+      
+      // Detect anomalies
+      const detectedAnomalies = detectAnomalies(sampleData, analyzedMetrics);
+      setAnomalies(detectedAnomalies);
+      
+      setIsLoading(false);
+    };
     
-    // Generate AI predictions and recommendations
-    const preds = generatePredictions(analyzedMetrics, analyzedBottlenecks);
-    setPredictions(preds);
-    
-    const recs = generateRecommendations(analyzedMetrics, analyzedBottlenecks);
-    setRecommendations(recs);
-    
-    // Detect anomalies
-    const detectedAnomalies = detectAnomalies(sampleData, analyzedMetrics);
-    setAnomalies(detectedAnomalies);
+    loadData();
   }, []);
 
-  if (!metrics) {
+  if (isLoading || !metrics) {
     return (
-      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Analyzing workflow data...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-dark">
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-6 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                  AI Bottleneck Intelligence
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Real-time process optimization and workflow analytics
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-primary rounded-lg">
+                <Zap className="w-5 h-5 text-white" />
+                <span className="font-semibold text-white">AI Powered</span>
+              </div>
+            </div>
+          </div>
+        </header>
+        <main className="container mx-auto px-6 py-8">
+          <div className="mb-6 p-4 bg-primary/10 border border-primary/30 rounded-lg flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+            <span className="text-foreground font-medium">{loadingMessage}</span>
+          </div>
+          <DashboardSkeleton />
+        </main>
       </div>
     );
   }

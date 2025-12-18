@@ -16,9 +16,13 @@ import {
   Image,
   Plus,
   X,
-  CheckCircle
+  CheckCircle,
+  FileText,
+  Table
 } from "lucide-react";
 import { AggregateMetrics, BottleneckAnalysis } from "@/utils/analytics";
+import jsPDF from "jspdf";
+import * as XLSX from "xlsx";
 
 interface ExportPanelProps {
   metrics: AggregateMetrics;
@@ -79,6 +83,106 @@ export const ExportPanel = ({ metrics, bottlenecks }: ExportPanelProps) => {
     toast.success("CSV export downloaded");
   };
 
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const date = new Date().toLocaleDateString();
+    
+    // Title
+    doc.setFontSize(20);
+    doc.text("Bottleneck Analysis Report", 20, 20);
+    
+    // Date
+    doc.setFontSize(10);
+    doc.text(`Generated: ${date}`, 20, 30);
+    
+    // Summary Metrics
+    doc.setFontSize(14);
+    doc.text("Performance Summary", 20, 45);
+    doc.setFontSize(11);
+    doc.text(`Efficiency Score: ${metrics.efficiencyScore}%`, 25, 55);
+    doc.text(`Average Queue Time: ${metrics.avgQueueTime} minutes`, 25, 62);
+    doc.text(`Average Process Time: ${metrics.avgProcessTime} minutes`, 25, 69);
+    doc.text(`Total Tasks Analyzed: ${metrics.totalTasks}`, 25, 76);
+    doc.text(`Critical Bottlenecks: ${metrics.criticalBottlenecks}`, 25, 83);
+    
+    // Top Bottlenecks Table
+    doc.setFontSize(14);
+    doc.text("Top 10 Bottlenecks", 20, 100);
+    doc.setFontSize(9);
+    
+    const tableTop = 110;
+    doc.text("Task ID", 25, tableTop);
+    doc.text("Queue Time", 60, tableTop);
+    doc.text("Process Time", 95, tableTop);
+    doc.text("Score", 135, tableTop);
+    doc.text("Risk", 165, tableTop);
+    
+    bottlenecks.slice(0, 10).forEach((b, i) => {
+      const y = tableTop + 8 + (i * 7);
+      doc.text(String(b.taskId), 25, y);
+      doc.text(`${b.queueWaitTime}m`, 60, y);
+      doc.text(`${b.processTime}m`, 95, y);
+      doc.text(b.bottleneckScore.toFixed(1), 135, y);
+      doc.text(b.riskLevel, 165, y);
+    });
+    
+    // Annotations
+    if (annotations.length > 0) {
+      doc.setFontSize(14);
+      doc.text("Notes & Annotations", 20, 195);
+      doc.setFontSize(9);
+      annotations.forEach((a, i) => {
+        doc.text(`• ${a.text} (${a.author})`, 25, 205 + (i * 7));
+      });
+    }
+    
+    doc.save(`bottleneck-report-${new Date().toISOString().split("T")[0]}.pdf`);
+    toast.success("PDF report downloaded");
+  };
+
+  const handleExportExcel = () => {
+    // Create workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Summary sheet
+    const summaryData = [
+      ["Bottleneck Analysis Report"],
+      ["Generated", new Date().toLocaleDateString()],
+      [""],
+      ["Performance Summary"],
+      ["Efficiency Score", `${metrics.efficiencyScore}%`],
+      ["Average Queue Time", `${metrics.avgQueueTime} minutes`],
+      ["Average Process Time", `${metrics.avgProcessTime} minutes`],
+      ["Total Tasks", metrics.totalTasks],
+      ["Critical Bottlenecks", metrics.criticalBottlenecks]
+    ];
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, summarySheet, "Summary");
+    
+    // Bottlenecks sheet
+    const bottleneckHeaders = ["Task ID", "Queue Time (min)", "Process Time (min)", "Total Time (min)", "Bottleneck Score", "Risk Level"];
+    const bottleneckRows = bottlenecks.map(b => [
+      b.taskId,
+      b.queueWaitTime,
+      b.processTime,
+      b.totalTime,
+      b.bottleneckScore.toFixed(2),
+      b.riskLevel
+    ]);
+    const bottleneckSheet = XLSX.utils.aoa_to_sheet([bottleneckHeaders, ...bottleneckRows]);
+    XLSX.utils.book_append_sheet(wb, bottleneckSheet, "Bottlenecks");
+    
+    // Annotations sheet
+    const annotationHeaders = ["Note", "Author", "Date"];
+    const annotationRows = annotations.map(a => [a.text, a.author, a.timestamp.toLocaleDateString()]);
+    const annotationSheet = XLSX.utils.aoa_to_sheet([annotationHeaders, ...annotationRows]);
+    XLSX.utils.book_append_sheet(wb, annotationSheet, "Annotations");
+    
+    // Download
+    XLSX.writeFile(wb, `bottleneck-analysis-${new Date().toISOString().split("T")[0]}.xlsx`);
+    toast.success("Excel workbook downloaded");
+  };
+
   const handleGenerateShareLink = () => {
     // Simulate generating a shareable link
     const fakeLink = `https://app.bottleneck.ai/share/${Math.random().toString(36).substring(7)}`;
@@ -131,7 +235,25 @@ export const ExportPanel = ({ metrics, bottlenecks }: ExportPanelProps) => {
         {/* Export Options */}
         <div>
           <h4 className="font-medium text-foreground mb-3">Export Dashboard</h4>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            <Button 
+              variant="outline" 
+              className="flex flex-col h-auto py-4"
+              onClick={handleExportPDF}
+            >
+              <FileText className="w-6 h-6 mb-2 text-destructive" />
+              <span className="text-sm">PDF</span>
+              <span className="text-xs text-muted-foreground">Report</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex flex-col h-auto py-4"
+              onClick={handleExportExcel}
+            >
+              <Table className="w-6 h-6 mb-2 text-success" />
+              <span className="text-sm">Excel</span>
+              <span className="text-xs text-muted-foreground">Workbook</span>
+            </Button>
             <Button 
               variant="outline" 
               className="flex flex-col h-auto py-4"
@@ -146,7 +268,7 @@ export const ExportPanel = ({ metrics, bottlenecks }: ExportPanelProps) => {
               className="flex flex-col h-auto py-4"
               onClick={handleExportCSV}
             >
-              <FileSpreadsheet className="w-6 h-6 mb-2 text-success" />
+              <FileSpreadsheet className="w-6 h-6 mb-2 text-warning" />
               <span className="text-sm">CSV</span>
               <span className="text-xs text-muted-foreground">Spreadsheet</span>
             </Button>
