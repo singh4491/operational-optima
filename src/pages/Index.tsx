@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { sampleData } from "@/data/sampleData";
 import { analyzeData, BottleneckAnalysis, AggregateMetrics } from "@/utils/analytics";
 import { generatePredictions, generateRecommendations, detectAnomalies, Prediction, Recommendation, Anomaly } from "@/utils/predictions";
+import { useAuth } from "@/hooks/useAuth";
 import { MetricsCard } from "@/components/MetricsCard";
 import { BottleneckChart } from "@/components/BottleneckChart";
 import { TopBottlenecks } from "@/components/TopBottlenecks";
@@ -13,9 +15,9 @@ import { DynamicBottleneckPanel } from "@/components/DynamicBottleneckPanel";
 import { DrillDownAnalytics } from "@/components/DrillDownAnalytics";
 import { IntegrationTemplates } from "@/components/IntegrationTemplates";
 import { DashboardSkeleton } from "@/components/DashboardSkeleton";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap, Brain, FlaskConical, Bell, Share2, Radio, Search, Plug } from "lucide-react";
-
+import { Activity, Clock, TrendingUp, AlertTriangle, Target, Zap, Brain, FlaskConical, Bell, Share2, Radio, Search, Plug, LogOut, Loader2 } from "lucide-react";
 const Index = () => {
   const [bottlenecks, setBottlenecks] = useState<BottleneckAnalysis[]>([]);
   const [metrics, setMetrics] = useState<AggregateMetrics | null>(null);
@@ -24,7 +26,15 @@ const Index = () => {
   const [anomalies, setAnomalies] = useState<Anomaly[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Preparing dashboard...");
+  
+  const { user, loading: authLoading, signOut } = useAuth();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -62,6 +72,14 @@ const Index = () => {
     
     loadData();
   }, []);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (isLoading || !metrics) {
     return (
@@ -109,9 +127,15 @@ const Index = () => {
                 Real-time process optimization and workflow analytics
               </p>
             </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-gradient-primary rounded-lg">
-              <Zap className="w-5 h-5 text-white" />
-              <span className="font-semibold text-white">AI Powered</span>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-4 py-2 bg-gradient-primary rounded-lg">
+                <Zap className="w-5 h-5 text-primary-foreground" />
+                <span className="font-semibold text-primary-foreground">AI Powered</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => signOut()}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign Out
+              </Button>
             </div>
           </div>
         </div>
