@@ -169,36 +169,36 @@ const Index = () => {
 
         {/* Main Tabs for Features */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="flex flex-wrap h-auto gap-1 w-full lg:w-auto lg:inline-flex">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
+          <TabsList className="w-full grid grid-cols-4 lg:grid-cols-8 h-14 p-1.5 bg-card border-2 border-primary/30 shadow-lg rounded-xl">
+            <TabsTrigger value="overview" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Activity className="w-4 h-4" />
               <span className="hidden sm:inline">Overview</span>
             </TabsTrigger>
-            <TabsTrigger value="dynamic" className="flex items-center gap-2">
+            <TabsTrigger value="dynamic" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Radio className="w-4 h-4" />
               <span className="hidden sm:inline">Dynamic</span>
             </TabsTrigger>
-            <TabsTrigger value="predictive" className="flex items-center gap-2">
+            <TabsTrigger value="predictive" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Brain className="w-4 h-4" />
               <span className="hidden sm:inline">Predictive AI</span>
             </TabsTrigger>
-            <TabsTrigger value="alerts" className="flex items-center gap-2">
+            <TabsTrigger value="alerts" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Bell className="w-4 h-4" />
               <span className="hidden sm:inline">Alerts</span>
             </TabsTrigger>
-            <TabsTrigger value="drilldown" className="flex items-center gap-2">
+            <TabsTrigger value="drilldown" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Search className="w-4 h-4" />
               <span className="hidden sm:inline">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="simulation" className="flex items-center gap-2">
+            <TabsTrigger value="simulation" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <FlaskConical className="w-4 h-4" />
               <span className="hidden sm:inline">Simulation</span>
             </TabsTrigger>
-            <TabsTrigger value="integrations" className="flex items-center gap-2">
+            <TabsTrigger value="integrations" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Plug className="w-4 h-4" />
               <span className="hidden sm:inline">Integrations</span>
             </TabsTrigger>
-            <TabsTrigger value="export" className="flex items-center gap-2">
+            <TabsTrigger value="export" className="flex items-center justify-center gap-2 text-sm font-medium data-[state=active]:bg-gradient-primary data-[state=active]:text-white data-[state=active]:shadow-md rounded-lg transition-all">
               <Share2 className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
             </TabsTrigger>
