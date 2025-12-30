@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BottleneckAnalysis } from "@/utils/analytics";
-import { AlertTriangle, TrendingUp, Clock } from "lucide-react";
+import { AlertTriangle, TrendingUp, Clock, ArrowRight, CheckCircle2, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TopBottlenecksProps {
@@ -26,18 +26,45 @@ export const TopBottlenecks = ({ bottlenecks, limit = 10 }: TopBottlenecksProps)
     return TrendingUp;
   };
 
+  const getPriorityStyles = (priority: string) => {
+    switch (priority) {
+      case "immediate": return "bg-destructive/20 text-destructive border-destructive/40";
+      case "high": return "bg-warning/20 text-warning border-warning/40";
+      case "medium": return "bg-accent/20 text-accent-foreground border-accent/40";
+      default: return "bg-muted text-muted-foreground border-border";
+    }
+  };
+
+  const getPriorityLabel = (priority: string) => {
+    switch (priority) {
+      case "immediate": return "🚨 Immediate";
+      case "high": return "⚡ High Priority";
+      case "medium": return "📋 Medium";
+      default: return "📌 Low";
+    }
+  };
+
   return (
     <Card className="p-6 bg-card border-border">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-foreground">Critical Bottlenecks</h3>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gradient-primary rounded-lg">
+            <Zap className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-foreground">Critical Bottlenecks</h3>
+            <p className="text-sm text-muted-foreground">With actionable next steps</p>
+          </div>
+        </div>
         <Badge variant="outline" className="text-xs">
           Top {limit} Tasks
         </Badge>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {topBottlenecks.map((bottleneck, index) => {
           const RiskIcon = getRiskIcon(bottleneck.riskLevel);
+          const showActions = bottleneck.riskLevel === "critical" || bottleneck.riskLevel === "high";
           
           return (
             <div
@@ -92,7 +119,8 @@ export const TopBottlenecks = ({ bottlenecks, limit = 10 }: TopBottlenecksProps)
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* Insights */}
+              <div className="space-y-1 mb-4">
                 {bottleneck.insights.map((insight, idx) => (
                   <p key={idx} className="text-xs text-muted-foreground flex items-start gap-2">
                     <span className="text-primary">•</span>
@@ -100,6 +128,48 @@ export const TopBottlenecks = ({ bottlenecks, limit = 10 }: TopBottlenecksProps)
                   </p>
                 ))}
               </div>
+
+              {/* Actionable Recommendations - Always shown for critical/high, condensed for others */}
+              {bottleneck.actionableSteps && bottleneck.actionableSteps.length > 0 && (
+                <div className={cn(
+                  "rounded-lg p-3 space-y-2",
+                  showActions ? "bg-background/50 border border-primary/20" : "bg-background/30"
+                )}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <CheckCircle2 className={cn(
+                      "w-4 h-4",
+                      showActions ? "text-primary" : "text-muted-foreground"
+                    )} />
+                    <p className={cn(
+                      "text-sm font-semibold",
+                      showActions ? "text-foreground" : "text-muted-foreground"
+                    )}>
+                      {showActions ? "Recommended Actions" : "Status"}
+                    </p>
+                  </div>
+                  
+                  {bottleneck.actionableSteps.slice(0, showActions ? 4 : 1).map((step, idx) => (
+                    <div 
+                      key={idx} 
+                      className={cn(
+                        "flex items-start gap-3 p-2 rounded-md border",
+                        getPriorityStyles(step.priority)
+                      )}
+                    >
+                      <ArrowRight className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs font-medium">{getPriorityLabel(step.priority)}</span>
+                        </div>
+                        <p className="text-sm font-medium mt-1">{step.action}</p>
+                        <p className="text-xs opacity-80 mt-0.5">
+                          Expected Impact: {step.expectedImpact}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           );
         })}
